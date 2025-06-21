@@ -1,0 +1,90 @@
+# Roadmap
+
+This document outlines the roadmap for the .NET Starter Kit project, focusing on testing strategy and implementation.
+
+## Testing Strategy
+
+### Unit Testing
+- [x] Set up xUnit test projects
+- [x] Implement test data builders
+- [x] Create base test classes
+- [x] Test domain entities and value objects
+- [ ] Add tests for domain services
+- [ ] Implement tests for application services
+- [ ] Add tests for API controllers
+
+### Integration Testing
+- [x] Set up test database infrastructure
+- [x] Implement repository tests
+- [x] Test database migrations
+- [x] Test event handlers
+- [ ] Add tests for API endpoints
+- [ ] Test authentication and authorization
+- [ ] Test background services
+
+### End-to-End Testing
+- [ ] Set up Playwright or Selenium
+- [ ] Implement UI tests
+- [ ] Test critical user journeys
+- [ ] Add API contract tests
+
+### Performance Testing
+- [ ] Set up benchmarking
+- [ ] Implement load tests
+- [ ] Test database query performance
+- [ ] Monitor memory usage
+
+### Security Testing
+- [ ] Implement security scanning
+- [ ] Test for common vulnerabilities
+- [ ] Add authentication and authorization tests
+- [ ] Test input validation
+
+## Current Focus
+
+### In Progress
+- [x] Implement core domain model tests
+- [x] Set up integration test infrastructure
+- [x] Add repository tests
+- [x] Implement event handler tests
+
+### Next Up
+- [ ] Add API controller tests
+- [ ] Implement end-to-end tests
+- [ ] Set up CI/CD pipeline for testing
+- [ ] Add code coverage reporting
+
+## Future Enhancements
+
+### Test Automation
+- [ ] Implement test data management
+- [ ] Add test parallelization
+- [ ] Set up test reporting
+- [ ] Add mutation testing
+
+### Developer Experience
+- [ ] Add test code snippets
+- [ ] Implement test code generation
+- [ ] Add documentation for testing patterns
+- [ ] Create test templates
+
+### Monitoring and Reporting
+- [ ] Set up test result dashboards
+- [ ] Implement test flakiness detection
+- [ ] Add performance baselines
+- [ ] Monitor test execution time
+
+## How to Contribute
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Add your tests following the established patterns
+4. Ensure all tests pass
+5. Submit a pull request
+
+## Resources
+
+- [xUnit Documentation](https://xunit.net/)
+- [FluentAssertions Documentation](https://fluentassertions.com/)
+- [Moq Documentation](https://github.com/moq/moq4/wiki/Quickstart)
+- [Bogus Documentation](https://github.com/bchavez/Bogus)

@@ -1,0 +1,71 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateProgramFile>true</GenerateProgramFile>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Catalog.Infrastructure.IntegrationTests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Testing Frameworks -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageReference Include="Respawn" Version="6.2.1" />
+    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5" />
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    
+    <!-- Assertion Libraries -->
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    
+    <!-- Test Data Generation -->
+    <PackageReference Include="Bogus" Version="35.6.3" />
+    
+    <!-- Container for Integration Tests -->
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.0.0" />
+    
+    <!-- Database Testing -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.6" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    
+    <!-- Test Fixtures -->
+    <!-- xunit.extensions is no longer maintained and has been replaced by xunit.assert and xunit.core functionality -->
+    <!-- Using xunit.assert instead for better compatibility -->
+    <PackageReference Include="xunit.assert" Version="2.4.2" />
+    
+    <!-- Multi-tenancy -->
+    <PackageReference Include="Finbuckle.MultiTenant" Version="9.2.0" />
+    <PackageReference Include="Finbuckle.MultiTenant.EntityFrameworkCore" Version="9.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\api\modules\Catalog\Catalog.Infrastructure\Catalog.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\src\api\modules\Catalog\Catalog.Domain\Catalog.Domain.csproj" />
+    <ProjectReference Include="..\..\unit\Catalog.Domain.UnitTests\Catalog.Domain.UnitTests.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+    <ProjectReference Include="..\..\..\src\api\framework\Infrastructure\Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="System.Threading.Tasks" />
+    <Using Include="Xunit" />
+    <Using Include="FluentAssertions" />
+    <Using Include="Bogus" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Catalog.Domain" />
+    <Using Include="Catalog.Infrastructure" />
+  </ItemGroup>
+
+</Project>

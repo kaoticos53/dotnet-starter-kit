@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 using System.Globalization;
@@ -39,12 +39,14 @@ public static class SpecificationBuilderExtensions
             .OrderBy(filter.OrderBy);
     }
 
-    public static IOrderedSpecificationBuilder<T> SearchByKeyword<T>(
+    public static ISpecificationBuilder<T> SearchByKeyword<T>(
         this ISpecificationBuilder<T> specificationBuilder,
         string? keyword) =>
-        specificationBuilder.AdvancedSearch(new Search { Keyword = keyword });
+        string.IsNullOrEmpty(keyword) 
+            ? specificationBuilder 
+            : specificationBuilder.AdvancedSearch(new Search { Keyword = keyword });
 
-    public static IOrderedSpecificationBuilder<T> AdvancedSearch<T>(
+    public static ISpecificationBuilder<T> AdvancedSearch<T>(
         this ISpecificationBuilder<T> specificationBuilder,
         Search? search)
     {
@@ -52,7 +54,7 @@ public static class SpecificationBuilderExtensions
         {
             if (search.Fields?.Count > 0)
             {
-                // search seleted fields (can contain deeper nested fields)
+                // search selected fields (can contain deeper nested fields)
                 foreach (string field in search.Fields)
                 {
                     var paramExpr = Expression.Parameter(typeof(T));
@@ -77,7 +79,7 @@ public static class SpecificationBuilderExtensions
             }
         }
 
-        return new OrderedSpecificationBuilder<T>(specificationBuilder.Specification);
+        return specificationBuilder;
     }
 
     private static void AddSearchPropertyByKeyword<T>(
@@ -116,63 +118,125 @@ public static class SpecificationBuilderExtensions
         var selector = Expression.Lambda<Func<T, string>>(callToLowerMethod, paramExpr);
 
         ((List<SearchExpressionInfo<T>>)specificationBuilder.Specification.SearchCriterias)
-            .Add(new SearchExpressionInfo<T>(selector, searchTerm, 1));
+            .Add(new SearchExpressionInfo<T>(
+                (Expression<Func<T, string?>>)(object)selector, 
+                searchTerm, 
+                1));
     }
 
-    public static IOrderedSpecificationBuilder<T> AdvancedFilter<T>(
-        this ISpecificationBuilder<T> specificationBuilder,
+    public static ISpecificationBuilder<T> AdvancedFilter<T>(
+        this ISpecificationBuilder<T> query,
         Filter? filter)
     {
-        if (filter is not null)
+        if (filter == null) return query;
+
+        if (filter.Logic?.ToLower() == "and")
         {
+            if (filter.Filters != null)
+            {
+                foreach (var filterItem in filter.Filters)
+                {
+                    query = query.AdvancedFilter(filterItem);
+                }
+            }
+        }
+        else if (filter.Logic?.ToLower() == "or")
+        {
+            query = query.AdvancedFilter(filter.Filters, FilterLogic.OR);
+        }
+        else if (filter.Logic?.ToLower() == "not")
+        {
+            query = query.AdvancedFilter(filter.Filters, FilterLogic.NOT);
+        }
+        else if (filter.Logic?.ToLower() == "nor")
+        {
+            query = query.AdvancedFilter(filter.Filters, FilterLogic.NOR);
+        }
+        else if (filter.Filters is not null)
+        {
+            query = query.AdvancedFilter(filter.Filters, FilterLogic.AND);
+        }
+        else
+        {
+            // Single filter case
             var parameter = Expression.Parameter(typeof(T));
-
-            Expression binaryExpresioFilter;
-
-            if (!string.IsNullOrEmpty(filter.Logic))
+            var filterExpr = CreateFilterExpression<T>(filter, parameter);
+            if (filterExpr != null)
             {
-                if (filter.Filters is null) throw new CustomException("The Filters attribute is required when declaring a logic");
-                binaryExpresioFilter = CreateFilterExpression(filter.Logic, filter.Filters, parameter);
+                var lambda = Expression.Lambda<Func<T, bool>>(filterExpr, parameter);
+                query = query.Where(lambda);
             }
-            else
-            {
-                var filterValid = GetValidFilter(filter);
-                binaryExpresioFilter = CreateFilterExpression(filterValid.Field!, filterValid.Operator!, filterValid.Value, parameter);
-            }
-
-            ((List<WhereExpressionInfo<T>>)specificationBuilder.Specification.WhereExpressions)
-                .Add(new WhereExpressionInfo<T>(Expression.Lambda<Func<T, bool>>(binaryExpresioFilter, parameter)));
         }
 
-        return new OrderedSpecificationBuilder<T>(specificationBuilder.Specification);
+        return query;
+    }
+    
+    public static ISpecificationBuilder<T> AdvancedFilter<T>(
+        this ISpecificationBuilder<T> query,
+        IEnumerable<Filter>? filters,
+        string logic = FilterLogic.AND)
+    {
+        if (filters?.Any() != true) return query;
+        
+        var parameter = Expression.Parameter(typeof(T));
+        Expression? combinedExpression = null;
+        
+        foreach (var filter in filters)
+        {
+            var filterExpr = CreateFilterExpression<T>(filter, parameter);
+            if (filterExpr == null) continue;
+                
+            combinedExpression = combinedExpression == null 
+                ? filterExpr 
+                : CombineFilter<T>(logic, combinedExpression, filterExpr);
+        }
+
+        if (combinedExpression != null)
+        {
+            var lambda = Expression.Lambda<Func<T, bool>>(combinedExpression, parameter);
+            query = query.Where(lambda);
+        }
+
+        return query;
     }
 
-    private static Expression CreateFilterExpression(
+    private static Expression? CreateFilterExpression<T>(Filter filter, ParameterExpression parameter)
+    {
+        if (filter == null) return null;
+        
+        if (!string.IsNullOrEmpty(filter.Logic))
+        {
+            if (filter.Filters == null) 
+                throw new CustomException("The Filters attribute is required when declaring a logic");
+                
+            return CreateFilterExpression<T>(filter.Logic, filter.Filters, parameter);
+        }
+        else
+        {
+            var filterValid = GetValidFilter(filter);
+            return CreateFilterExpression(filterValid.Field!, filterValid.Operator!, filterValid.Value, parameter);
+        }
+    }
+
+    private static Expression CreateFilterExpression<T>(
         string logic,
         IEnumerable<Filter> filters,
         ParameterExpression parameter)
     {
-        Expression filterExpression = default!;
+        Expression? filterExpression = null;
 
         foreach (var filter in filters)
         {
-            Expression bExpresionFilter;
-
-            if (!string.IsNullOrEmpty(filter.Logic))
+            var filterExpr = CreateFilterExpression<T>(filter, parameter);
+            if (filterExpr != null)
             {
-                if (filter.Filters is null) throw new CustomException("The Filters attribute is required when declaring a logic");
-                bExpresionFilter = CreateFilterExpression(filter.Logic, filter.Filters, parameter);
+                filterExpression = filterExpression == null 
+                    ? filterExpr 
+                    : CombineFilter<T>(logic, filterExpression, filterExpr);
             }
-            else
-            {
-                var filterValid = GetValidFilter(filter);
-                bExpresionFilter = CreateFilterExpression(filterValid.Field!, filterValid.Operator!, filterValid.Value, parameter);
-            }
-
-            filterExpression = filterExpression is null ? bExpresionFilter : CombineFilter(logic, filterExpression, bExpresionFilter);
         }
 
-        return filterExpression;
+        return filterExpression ?? Expression.Constant(true);
     }
 
     private static Expression CreateFilterExpression(
@@ -212,16 +276,20 @@ public static class SpecificationBuilderExtensions
         };
     }
 
-    private static BinaryExpression CombineFilter(
+    private static Expression CombineFilter<T>(
         string filterOperator,
         Expression bExpresionBase,
-        Expression bExpresion) => filterOperator switch
+        Expression bExpresion)
+    {
+        return filterOperator switch
         {
-            FilterLogic.AND => Expression.And(bExpresionBase, bExpresion),
-            FilterLogic.OR => Expression.Or(bExpresionBase, bExpresion),
-            FilterLogic.XOR => Expression.ExclusiveOr(bExpresionBase, bExpresion),
-            _ => throw new ArgumentException("FilterLogic is not valid."),
+            FilterLogic.AND => Expression.AndAlso(bExpresionBase, bExpresion),
+            FilterLogic.OR => Expression.OrElse(bExpresionBase, bExpresion),
+            FilterLogic.NOT => Expression.Not(bExpresionBase),
+            FilterLogic.NOR => Expression.Not(Expression.OrElse(bExpresionBase, bExpresion)),
+            _ => throw new ArgumentException("Operador lógico no soportado")
         };
+    }
 
     private static MemberExpression GetPropertyExpression(
         string propertyName,
@@ -304,32 +372,28 @@ public static class SpecificationBuilderExtensions
         return filter;
     }
 
-    public static IOrderedSpecificationBuilder<T> OrderBy<T>(
-        this ISpecificationBuilder<T> specificationBuilder,
+    public static ISpecificationBuilder<T> OrderBy<T>(
+        this ISpecificationBuilder<T> query,
         string[]? orderByFields)
     {
         if (orderByFields is not null)
         {
-            foreach (var field in ParseOrderBy(orderByFields))
+            foreach (var field in orderByFields)
             {
-                var paramExpr = Expression.Parameter(typeof(T));
-
-                Expression propertyExpr = paramExpr;
-                foreach (string member in field.Key.Split('.'))
+                var orderBy = field.Trim().Split(' ');
+                var orderByField = orderBy[0];
+                if (orderBy.Length > 1 && orderBy[1].ToUpper() == "DESC")
                 {
-                    propertyExpr = Expression.PropertyOrField(propertyExpr, member);
+                    query = query.OrderBy(new[] { $"{orderByField} DESC" });
                 }
-
-                var keySelector = Expression.Lambda<Func<T, object?>>(
-                    Expression.Convert(propertyExpr, typeof(object)),
-                    paramExpr);
-
-                ((List<OrderExpressionInfo<T>>)specificationBuilder.Specification.OrderExpressions)
-                    .Add(new OrderExpressionInfo<T>(keySelector, field.Value));
+                else
+                {
+                    query = query.OrderBy(new[] { orderByField });
+                }
             }
         }
 
-        return new OrderedSpecificationBuilder<T>(specificationBuilder.Specification);
+        return query;
     }
 
     private static Dictionary<string, OrderTypeEnum> ParseOrderBy(string[] orderByFields) =>
@@ -351,4 +415,12 @@ public static class SpecificationBuilderExtensions
 
             return new KeyValuePair<string, OrderTypeEnum>(field, orderBy);
         }));
+}
+
+public static class FilterLogic
+{
+    public const string AND = "and";
+    public const string OR = "or";
+    public const string NOT = "not";
+    public const string NOR = "nor";
 }

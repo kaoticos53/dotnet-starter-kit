@@ -1,4 +1,4 @@
-﻿using FSH.Framework.Core.Domain;
+using FSH.Framework.Core.Domain;
 using FSH.Framework.Core.Domain.Contracts;
 using FSH.Starter.WebApi.Catalog.Domain.Events;
 
@@ -26,6 +26,16 @@ public class Product : AuditableEntity, IAggregateRoot
 
     public static Product Create(string name, string? description, decimal price, Guid? brandId)
     {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Name cannot be null or whitespace.", nameof(name));
+        }
+
+        if (price <= 0)
+        {
+            throw new ArgumentException("Price must be greater than zero.", nameof(price));
+        }
+
         return new Product(Guid.NewGuid(), name, description, price, brandId);
     }
 
@@ -33,22 +43,38 @@ public class Product : AuditableEntity, IAggregateRoot
     {
         bool isUpdated = false;
 
-        if (!string.IsNullOrWhiteSpace(name) && !string.Equals(Name, name, StringComparison.OrdinalIgnoreCase))
+        if (name != null)
         {
-            Name = name;
-            isUpdated = true;
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("Name cannot be empty or whitespace.", nameof(name));
+            }
+
+            if (!string.Equals(Name, name, StringComparison.OrdinalIgnoreCase))
+            {
+                Name = name;
+                isUpdated = true;
+            }
         }
 
-        if (!string.Equals(Description, description, StringComparison.OrdinalIgnoreCase))
+        if (description != null && !string.Equals(Description, description, StringComparison.OrdinalIgnoreCase))
         {
             Description = description;
             isUpdated = true;
         }
 
-        if (price.HasValue && Price != price.Value)
+        if (price.HasValue)
         {
-            Price = price.Value;
-            isUpdated = true;
+            if (price.Value <= 0)
+            {
+                throw new ArgumentException("Price must be greater than zero.", nameof(price));
+            }
+
+            if (Price != price.Value)
+            {
+                Price = price.Value;
+                isUpdated = true;
+            }
         }
 
         if (brandId.HasValue && brandId.Value != Guid.Empty && BrandId != brandId.Value)

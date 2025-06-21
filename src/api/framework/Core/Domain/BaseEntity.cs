@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using FSH.Framework.Core.Domain.Contracts;
 using FSH.Framework.Core.Domain.Events;
@@ -14,6 +14,14 @@ public abstract class BaseEntity<TId> : IEntity<TId>
     {
         if (!DomainEvents.Contains(@event))
             DomainEvents.Add(@event);
+    }
+
+    /// <summary>
+    /// Limpia todos los eventos de dominio pendientes en la entidad.
+    /// </summary>
+    public void ClearDomainEvents()
+    {
+        DomainEvents.Clear();
     }
 }
 

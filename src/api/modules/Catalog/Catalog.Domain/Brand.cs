@@ -1,4 +1,4 @@
-﻿using FSH.Framework.Core.Domain;
+using FSH.Framework.Core.Domain;
 using FSH.Framework.Core.Domain.Contracts;
 using FSH.Starter.WebApi.Catalog.Domain.Events;
 
@@ -20,6 +20,11 @@ public class Brand : AuditableEntity, IAggregateRoot
 
     public static Brand Create(string name, string? description)
     {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Name cannot be null or whitespace.", nameof(name));
+        }
+
         return new Brand(Guid.NewGuid(), name, description);
     }
 
@@ -27,13 +32,21 @@ public class Brand : AuditableEntity, IAggregateRoot
     {
         bool isUpdated = false;
 
-        if (!string.IsNullOrWhiteSpace(name) && !string.Equals(Name, name, StringComparison.OrdinalIgnoreCase))
+        if (name != null)
         {
-            Name = name;
-            isUpdated = true;
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("Name cannot be empty or whitespace.", nameof(name));
+            }
+
+            if (!string.Equals(Name, name, StringComparison.OrdinalIgnoreCase))
+            {
+                Name = name;
+                isUpdated = true;
+            }
         }
 
-        if (!string.Equals(Description, description, StringComparison.OrdinalIgnoreCase))
+        if (description != null && !string.Equals(Description, description, StringComparison.OrdinalIgnoreCase))
         {
             Description = description;
             isUpdated = true;

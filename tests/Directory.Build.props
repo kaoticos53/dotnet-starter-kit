@@ -1,0 +1,17 @@
+<Project>
+  <!-- Common properties for all test projects -->
+  <PropertyGroup>
+    <IsTestProject>true</IsTestProject>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591;CS1573;CS0414;CS8600;CS8602;CS8603;CS8625;CS8618;CS1998;CS8604;CS8601;CS8609;CS8629;CS8632;CS8767;CS8765</NoWarn>
+    
+    <!-- Enable central package management -->
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <EnablePackageVersionOverride>true</EnablePackageVersionOverride>
+  </PropertyGroup>
+
+  <!-- Common properties for all test projects -->
+  <!-- Package references are now managed in Directory.Packages.props -->
+</Project>

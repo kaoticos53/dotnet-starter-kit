@@ -1,4 +1,4 @@
-﻿using Finbuckle.MultiTenant.Abstractions;
+using Finbuckle.MultiTenant.Abstractions;
 using Finbuckle.MultiTenant.EntityFrameworkCore;
 using FSH.Framework.Core.Domain.Contracts;
 using FSH.Framework.Core.Persistence;

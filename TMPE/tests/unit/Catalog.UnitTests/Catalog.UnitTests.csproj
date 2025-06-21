@@ -1,0 +1,96 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateProgramFile>true</GenerateProgramFile>
+    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <EnforceCodeStyle>true</EnforceCodeStyle>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CA1515</NoWarn> <!-- Suppress CA1515 for test projects -->
+    <GenerateGlobalUsings>true</GenerateGlobalUsings>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <!-- Disable warnings about test methods not being called directly -->
+    <NoWarn>$(NoWarn);xUnit1013;xUnit1004</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Testing Frameworks -->
+    <PackageReference Include="AutoFixture.AutoMoq" Version="4.18.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    
+    <!-- Assertion Libraries -->
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    
+    <!-- Test Data Generation -->
+    <PackageReference Include="Bogus" Version="35.6.3" />
+    <PackageReference Include="AutoFixture" Version="4.18.1" />
+    <PackageReference Include="AutoFixture.Xunit2" Version="4.18.0" />
+    
+    <!-- Mocking -->
+    <PackageReference Include="Moq" Version="4.20.70" />
+    
+    <!-- Test Helpers -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.0" />
+    
+    <!-- Source Generators -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Global Usings -->
+  <ItemGroup>
+    <!-- Suppress CA1515 for specific files if needed -->
+    <Compile Update="**\*.cs">
+      <NoWarn>$(NoWarn);CA1515</NoWarn>
+    </Compile>
+    
+    <!-- Test Framework -->
+    <Using Include="Xunit" />
+    
+    <!-- Assertions -->
+    <Using Include="FluentAssertions" />
+    
+    <!-- Mocking -->
+    <Using Include="Moq" />
+    
+    <!-- Test Data Generation -->
+    <Using Include="AutoFixture" />
+    <Using Include="AutoFixture.Xunit2" />
+    
+    <!-- Domain References -->
+    <Using Include="FSH.Framework.Core.Domain" />
+    <Using Include="FSH.Starter.WebApi.Catalog.Domain" />
+    <Using Include="FSH.Starter.WebApi.Catalog.Domain.Events" />
+    
+    <!-- Test Helpers -->
+    <Using Include="FSH.Starter.WebApi.Catalog.Domain.Tests.Common" />
+    
+    <!-- System -->
+    <Using Include="System" />
+    <Using Include="System.Collections.Generic" />
+    <Using Include="System.Linq" />
+    <Using Include="System.Threading" />
+    <Using Include="System.Threading.Tasks" />
+  </ItemGroup>
+
+  <!-- Project References -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\api\modules\Catalog\Catalog.Domain\Catalog.Domain.csproj" />
+    <ProjectReference Include="..\..\src\api\framework\Core\Core.csproj" />
+    <ProjectReference Include="..\..\src\Shared\Shared.csproj" />
+  </ItemGroup>
+</Project>
